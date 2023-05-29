@@ -1,6 +1,6 @@
 # m5311_g
 
-A new Flutter project.
+本APP使用高德地图 ，使用 wifi 扫描，http 连接 onenet ,弹出层
 
 ## Getting Started
 
