@@ -64,6 +64,9 @@ class _BodyState extends State<Body> {
   OverlayEntry? overlayEntry;
   bool s_wifi = false; //弹出层是否显示 （wifi 显示）
   String socp_wifi = "";
+  bool locat_pos_new = true; //更新地图中心点  我的位置只更新第一次
+  bool target_pos_new = true; //更新地图中心点  目标位置 实时更新只更新一次，
+
   @override
   void initState() {
     super.initState();
@@ -89,22 +92,26 @@ class _BodyState extends State<Body> {
                 BitmapDescriptor.hueOrange),
           );
           _markers["0"] = marker;
-          _mapController?.moveCamera(
-            CameraUpdate.newCameraPosition(
-              CameraPosition(
-                  //中心点
-                  target: mlat != null
-                      ? LatLng((lat! + mlat!) / 2, (lon! + mlon!) / 2)
-                      : LatLng(lat!, lon!),
-                  //缩放级别
-                  zoom: zoom,
-                  //俯仰角0°~45°（垂直与地图时为0）
-                  tilt: tilt,
-                  //偏航角 0~360° (正北方为0)
-                  bearing: 0),
-            ),
-            animated: true,
-          );
+          if (locat_pos_new) {
+            //只更新一次
+            locat_pos_new = false;
+            _mapController?.moveCamera(
+              CameraUpdate.newCameraPosition(
+                CameraPosition(
+                    //中心点
+                    target: mlat != null
+                        ? LatLng((lat! + mlat!) / 2, (lon! + mlon!) / 2)
+                        : LatLng(lat!, lon!),
+                    //缩放级别
+                    zoom: zoom,
+                    //俯仰角0°~45°（垂直与地图时为0）
+                    tilt: tilt,
+                    //偏航角 0~360° (正北方为0)
+                    bearing: 0),
+              ),
+              animated: true,
+            );
+          }
         }
       });
     });
@@ -204,6 +211,7 @@ class _BodyState extends State<Body> {
   ///停止定位
   void _stopLocation() {
     startlocat = false;
+    locat_pos_new = true;
     _locationPlugin.stopLocation();
     setState(() {
       _markers.remove("0");
@@ -279,7 +287,8 @@ class _BodyState extends State<Body> {
             icon: BitmapDescriptor.fromIconPath('assets/start.png'));
         setState(() {
           _markers["1"] = marker;
-          if (startlocat == false) {
+          if (target_pos_new) {
+            target_pos_new = false;
             _mapController?.moveCamera(
               CameraUpdate.newCameraPosition(
                 CameraPosition(
@@ -305,6 +314,7 @@ class _BodyState extends State<Body> {
   }
 
   void updata() async {
+    target_pos_new = true; //重制 地图中心点
     var url_setdata = Uri.https(
       'iot-api.heclouds.com',
       'thingmodel/set-device-property',
@@ -525,7 +535,8 @@ class _BodyState extends State<Body> {
                     icon: BitmapDescriptor.fromIconPath('assets/start.png'));
                 setState(() {
                   _markers["1"] = marker;
-                  if (startlocat == false) {
+                  if (target_pos_new) {
+                    target_pos_new = true;
                     _mapController?.moveCamera(
                       CameraUpdate.newCameraPosition(
                         CameraPosition(
